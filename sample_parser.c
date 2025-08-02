@@ -29,9 +29,16 @@ struct command_line *parse_input()
 	struct command_line *curr_command = (struct command_line *) calloc(1, sizeof(struct command_line));
 
 	// Display prompt and get input
-	printf(": ");
-	fflush(stdout);
-	fgets(input, INPUT_LENGTH, stdin);
+	while(true) {
+		printf(": ");
+		fflush(stdout);
+		fgets(input, INPUT_LENGTH, stdin);
+
+		// Reprompt if first character given is # or blank line
+        if (input[0] == '#' || input[0] == '\n') {
+            continue;
+        }
+	}
 
 	// Tokenize the input
 	char *token = strtok(input, " \n");
