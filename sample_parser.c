@@ -10,7 +10,7 @@
 #include <string.h>
 
 #define INPUT_LENGTH 2048
-#define MAX_ARGS		 512
+#define MAX_ARGS 512
 
 
 struct command_line
@@ -28,25 +28,40 @@ struct command_line *parse_input()
 	char input[INPUT_LENGTH];
 	struct command_line *curr_command = (struct command_line *) calloc(1, sizeof(struct command_line));
 
-	// Get input
+	// Display prompt and get input
 	printf(": ");
 	fflush(stdout);
 	fgets(input, INPUT_LENGTH, stdin);
 
 	// Tokenize the input
 	char *token = strtok(input, " \n");
-	while(token){
-		if(!strcmp(token,"<")){
-			curr_command->input_file = strdup(strtok(NULL," \n"));
-		} else if(!strcmp(token,">")){
-			curr_command->output_file = strdup(strtok(NULL," \n"));
-		} else if(!strcmp(token,"&")){
-			curr_command->is_bg = true;
-		} else{
+	while(token) {
+		if(!strcmp(token, "<")) {
+			curr_command->input_file = strdup(strtok(NULL, " \n"));
+		}
+		else if(!strcmp(token, ">")) {
+			curr_command->output_file = strdup(strtok(NULL, " \n"));
+		}
+		// regular argument
+		else {
 			curr_command->argv[curr_command->argc++] = strdup(token);
 		}
-		token=strtok(NULL," \n");
+		// go to next part of argument
+		token = strtok(NULL, " \n");
 	}
+
+	// Check if needs to run in background if last argument is &
+	if (curr_command->argc > 0) {
+		if (strcmp(curr_command->argv[curr_command->argc - 1], "&") == 0) {
+			curr_command->is_bg = true;
+			// don't need & argument anymore since taken care of
+			free(curr_command->argv[curr_command->argc - 1]);
+			// replace with NULL in last argv for exec()
+			curr_command->argc--;
+			curr_command->argv[curr_command->argc] = NULL;
+		}
+	}
+
 	return curr_command;
 }
 
@@ -57,7 +72,6 @@ int main()
 	while(true)
 	{
 		curr_command = parse_input();
-
 	}
 	return EXIT_SUCCESS;
 }
