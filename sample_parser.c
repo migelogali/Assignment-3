@@ -8,6 +8,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/wait.h> // for status
 
 #define INPUT_LENGTH 2048
 #define MAX_ARGS 512
@@ -97,6 +98,8 @@ void free_command_line(struct command_line *curr_command) {
 
 int main() {
 	struct command_line *curr_command;
+	// in case no foreground or signal set
+	int status_val = 0;
 
 	while(true)
 	{
@@ -119,6 +122,17 @@ int main() {
 				}
 				free_command_line(curr_command);
     			continue;
+			}
+			if (strcmp(curr_command->argv[0], "status") == 0) {
+				// copied from 'Process API - Monitoring Child Processes' exploration
+				if (WIFEXITED(status_val)) {
+					printf("exit value %d\n", WEXITSTATUS(status_val));
+				}
+				else {
+					printf("terminated by signal %d\n", WTERMSIG(status_val));
+				}
+				free_command_line(curr_command);
+				continue;
 			}
 		}
 	}
