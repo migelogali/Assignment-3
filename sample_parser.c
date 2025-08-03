@@ -38,6 +38,7 @@ struct command_line *parse_input()
         if (input[0] == '#' || input[0] == '\n') {
             continue;
         }
+		break;
 	}
 
 	// Tokenize the input
@@ -63,13 +64,35 @@ struct command_line *parse_input()
 			curr_command->is_bg = true;
 			// don't need & argument anymore since taken care of
 			free(curr_command->argv[curr_command->argc - 1]);
-			// replace with NULL in last argv for exec()
 			curr_command->argc--;
-			curr_command->argv[curr_command->argc] = NULL;
 		}
 	}
+	// replace with NULL in last argv for exec()
+	curr_command->argv[curr_command->argc] = NULL;
 
 	return curr_command;
+}
+
+// free all pointers for args, input, and output from struct, then free struct
+void free_command_line(struct command_line *curr_command) {
+	// protects against blank line
+    if (curr_command == NULL) {
+		return;
+	}
+
+    for (int i = 0; i < curr_command->argc; i++) {
+        free(curr_command->argv[i]);
+    }
+
+    if (curr_command->input_file) {
+        free(curr_command->input_file);
+    }
+
+    if (curr_command->output_file) {
+        free(curr_command->output_file);
+    }
+
+    free(curr_command);
 }
 
 int main()
@@ -79,6 +102,13 @@ int main()
 	while(true)
 	{
 		curr_command = parse_input();
+		// to avoid strcmp error if blank line entered
+		if (curr_command->argc > 0) {
+			if (strcmp(curr_command->argv[0], "exit") == 0) {
+				free_command_line(curr_command);
+    			return EXIT_SUCCESS;
+			}
+		}
 	}
 	return EXIT_SUCCESS;
 }
