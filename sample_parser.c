@@ -95,8 +95,7 @@ void free_command_line(struct command_line *curr_command) {
     free(curr_command);
 }
 
-int main()
-{
+int main() {
 	struct command_line *curr_command;
 
 	while(true)
@@ -107,6 +106,19 @@ int main()
 			if (strcmp(curr_command->argv[0], "exit") == 0) {
 				free_command_line(curr_command);
     			return EXIT_SUCCESS;
+			}
+			if (strcmp(curr_command->argv[0], "cd") == 0) {
+				if (curr_command->argv[1] == NULL) {
+					chdir(getenv("HOME"));
+				}
+				else {
+					// value of 0 means successfully changed, per man pages
+					if (chdir(curr_command->argv[1]) != 0) {
+            			perror("cd");
+					}
+				}
+				free_command_line(curr_command);
+    			continue;
 			}
 		}
 	}
