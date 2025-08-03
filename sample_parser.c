@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/wait.h> // for status
+#include <unistd.h>  // for execv
 
 #define INPUT_LENGTH 2048
 #define MAX_ARGS 512
@@ -110,7 +111,7 @@ int main() {
 				free_command_line(curr_command);
     			return EXIT_SUCCESS;
 			}
-			if (strcmp(curr_command->argv[0], "cd") == 0) {
+			else if (strcmp(curr_command->argv[0], "cd") == 0) {
 				if (curr_command->argv[1] == NULL) {
 					chdir(getenv("HOME"));
 				}
@@ -123,7 +124,7 @@ int main() {
 				free_command_line(curr_command);
     			continue;
 			}
-			if (strcmp(curr_command->argv[0], "status") == 0) {
+			else if (strcmp(curr_command->argv[0], "status") == 0) {
 				// copied from 'Process API - Monitoring Child Processes' exploration
 				if (WIFEXITED(status_val)) {
 					printf("exit value %d\n", WEXITSTATUS(status_val));
@@ -133,6 +134,36 @@ int main() {
 				}
 				free_command_line(curr_command);
 				continue;
+			}
+			// adapted from 'Process API - Executing a New Program' exploration
+			else {
+				int childStatus;
+				// Fork a new process
+				pid_t spawnPid = fork();
+
+				switch(spawnPid){
+				case -1:
+					perror("fork()\n");
+					exit(1);
+					break;
+				case 0:
+					// The child process executes this branch
+					printf("CHILD(%d) running command %s\n", getpid(), curr_command->argv[0]);
+					// Replace the current program
+					execvp(curr_command->argv[0], curr_command->argv);
+
+					// exec only returns if there is an error
+					perror("execvp");
+					exit(2);
+					break;
+				default:
+					// The parent process executes this branch; wait for child's termination
+					spawnPid = waitpid(spawnPid, &childStatus, 0);
+					// update status instead of exiting
+					status_val = childStatus;
+					printf("PARENT(%d): child(%d) terminated.\n", getpid(), spawnPid);
+					break;
+				}
 			}
 		}
 	}
