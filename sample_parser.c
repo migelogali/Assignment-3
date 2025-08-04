@@ -149,17 +149,18 @@ int main() {
 					break;
 				case 0:
 					// handle input file in child process first, then output file
+					// adapted from 'Processes and I/O' exploration
 					if (curr_command->input_file != NULL) {
 						int sourceFD = open(curr_command->input_file, O_RDONLY);
 						if (sourceFD == -1) { 
 							perror("source open()"); 
-							exit(1); 
+							exit(1);
 						}
 						// Redirect stdin to source file
 						int result = dup2(sourceFD, 0);
 						if (result == -1) { 
 							perror("source dup2()"); 
-							exit(1); 
+							exit(1);
 						}
 						// otherwise, input file successfully opened, so close it
 						close(sourceFD);
@@ -181,7 +182,6 @@ int main() {
 					}
 
 					// The child process executes this branch
-					printf("CHILD(%d) running command %s\n", getpid(), curr_command->argv[0]);
 					// Replace the current program
 					execvp(curr_command->argv[0], curr_command->argv);
 
@@ -194,7 +194,6 @@ int main() {
 					spawnPid = waitpid(spawnPid, &childStatus, 0);
 					// update status instead of exiting
 					status_val = childStatus;
-					printf("PARENT(%d): child(%d) terminated.\n", getpid(), spawnPid);
 					break;
 				}
 			}
