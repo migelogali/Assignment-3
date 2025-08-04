@@ -196,27 +196,27 @@ int main() {
 						fflush(stdout);
 					}
 					// all parent has to do in the foreground is call waitpid(), per section 6 instructions
-					else (
+					else {
 						spawnPid = waitpid(spawnPid, &childStatus, 0);
 						// update status instead of exiting
 						status_val = childStatus;
 						break;
-					)
+					}
 				}
 			}
 		}
-	}
-	// report when each child process finishes before next command
-	// -1  in argument means 'waitpid() will wait for any child process', per exploration
-	// wnohang makes it non-blocking
-	while ((spawnPid = waitpid(-1, &childStatus, WNOHANG)) > 0) {
-		if (WIFEXITED(childStatus)) {
-			printf("background pid %d is done: exit value %d\n", spawnPid, WEXITSTATUS(childStatus));
+		// report when each child process finishes before next command
+		// -1  in argument means 'waitpid() will wait for any child process', per exploration
+		// wnohang makes it non-blocking
+		while ((spawnPid = waitpid(-1, &childStatus, WNOHANG)) > 0) {
+			if (WIFEXITED(childStatus)) {
+				printf("background pid %d is done: exit value %d\n", spawnPid, WEXITSTATUS(childStatus));
+			}
+			else {
+				printf("background pid %d is done: terminated by signal %d\n", spawnPid, WTERMSIG(childStatus));
+			}
+			fflush(stdout);
 		}
-		else {
-			printf("background pid %d is done: terminated by signal %d\n", spawnPid, WTERMSIG(childStatus));
-		}
-		fflush(stdout);
 	}
 	return EXIT_SUCCESS;
 }
