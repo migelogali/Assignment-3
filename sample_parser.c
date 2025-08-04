@@ -102,6 +102,7 @@ int main() {
 	struct command_line *curr_command;
 	// in case no foreground or signal set
 	int status_val = 0;
+	int childStatus;
 
 	while(true)
 	{
@@ -138,7 +139,6 @@ int main() {
 			}
 			// adapted from 'Process API - Executing a New Program' exploration
 			else {
-				int childStatus;
 				// Fork a new process
 				pid_t spawnPid = fork();
 
