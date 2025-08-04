@@ -189,15 +189,34 @@ int main() {
 					perror("execvp");
 					exit(2);
 					break;
+				// The parent process executes this branch; wait for child's termination if not background
 				default:
-					// The parent process executes this branch; wait for child's termination
-					spawnPid = waitpid(spawnPid, &childStatus, 0);
-					// update status instead of exiting
-					status_val = childStatus;
-					break;
+					if (curr_command->is_bg) {
+    					printf("background pid is %d\n", spawnPid);
+						fflush(stdout);
+					}
+					// all parent has to do in the foreground is call waitpid(), per section 6 instructions
+					else (
+						spawnPid = waitpid(spawnPid, &childStatus, 0);
+						// update status instead of exiting
+						status_val = childStatus;
+						break;
+					)
 				}
 			}
 		}
+	}
+	// report when each child process finishes before next command
+	// -1  in argument means 'waitpid() will wait for any child process', per exploration
+	// wnohang makes it non-blocking
+	while ((spawnPid = waitpid(-1, &childStatus, WNOHANG)) > 0) {
+		if (WIFEXITED(childStatus)) {
+			printf("background pid %d is done: exit value %d\n", spawnPid, WEXITSTATUS(childStatus));
+		}
+		else {
+			printf("background pid %d is done: terminated by signal %d\n", spawnPid, WTERMSIG(childStatus));
+		}
+		fflush(stdout);
 	}
 	return EXIT_SUCCESS;
 }
