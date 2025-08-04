@@ -11,6 +11,7 @@
 #include <sys/wait.h> // for status
 #include <unistd.h>  // for execv
 #include <fcntl.h> // for open
+#include <sys/types.h> //for pid_t
 
 #define INPUT_LENGTH 2048
 #define MAX_ARGS 512
@@ -103,6 +104,7 @@ int main() {
 	// in case no foreground or signal set
 	int status_val = 0;
 	int childStatus;
+	pid_t spawnPid;
 
 	while(true)
 	{
@@ -140,7 +142,7 @@ int main() {
 			// adapted from 'Process API - Executing a New Program' exploration
 			else {
 				// Fork a new process
-				pid_t spawnPid = fork();
+				spawnPid = fork();
 
 				switch(spawnPid){
 				case -1:
