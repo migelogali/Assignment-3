@@ -18,6 +18,7 @@
 #define INPUT_LENGTH 2048
 #define MAX_ARGS 512
 
+int fg_only_mode = 0;
 
 struct command_line
 {
@@ -28,6 +29,17 @@ struct command_line
 	bool is_bg;
 };
 
+void handle_SIGTSTP(int signal_number) {
+    if (fg_only_mode == 0) {
+		char* enter_fg = "\nEntering foreground-only mode (& is now ignored)\n: ";
+        fg_only_mode = 1;
+        write(STDOUT_FILENO, enter_fg, 50);
+    } else {
+		char* exit_fg  = "\nExiting foreground-only mode\n: ";
+        fg_only_mode = 0;
+        write(STDOUT_FILENO, exit_fg, 30);
+    }
+}
 
 struct command_line *parse_input()
 {
@@ -67,7 +79,13 @@ struct command_line *parse_input()
 	// Check if needs to run in background if last argument is &
 	if (curr_command->argc > 0) {
 		if (strcmp(curr_command->argv[curr_command->argc - 1], "&") == 0) {
-			curr_command->is_bg = true;
+			if (fg_only_mode == 0) {
+            	curr_command->is_bg = true;
+			}
+			// ignore & if in foreground
+			else {
+				curr_command->is_bg = false;
+			}
 			// don't need & argument anymore since taken care of
 			free(curr_command->argv[curr_command->argc - 1]);
 			curr_command->argc--;
@@ -118,6 +136,13 @@ int main() {
 	SIGINT_action.sa_flags = 0;
 	// Install our signal handler
   	sigaction(SIGINT, &SIGINT_action, NULL);
+
+	// similarly with sigstp, but this includes a created signal handler
+	struct sigaction SIGTSTP_action = {0};
+	SIGTSTP_action.sa_handler = handle_SIGTSTP;
+	sigfillset(&SIGTSTP_action.sa_mask);
+	SIGTSTP_action.sa_flags = SA_RESTART;
+	sigaction(SIGTSTP, &SIGTSTP_action, NULL);
 
 	while(true)
 	{
