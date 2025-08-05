@@ -106,6 +106,17 @@ int main() {
 	int childStatus;
 	pid_t spawnPid;
 
+	struct sigaction SIGINT_action = {0};
+	// Fill out the SIGINT_action struct
+	// Register SIG_IGN as the signal handler
+	SIGINT_action.sa_handler = SIG_IGN;
+	// Block all catchable signals while SIG_IGN is running
+	sigfillset(&SIGINT_action.sa_mask);
+	// No flags set
+	SIGINT_action.sa_flags = 0;
+	// Install our signal handler
+  	sigaction(SIGINT, &SIGINT_action, NULL);
+
 	while(true)
 	{
 		curr_command = parse_input();
@@ -183,6 +194,15 @@ int main() {
 						close(targetFD);
 					}
 
+					// foreground child signal handling before execvp
+					if (!curr_command->background) {
+						struct sigaction SIGINT_action = {0};
+						SIGINT_action.sa_handler = SIG_DFL;
+						sigfillset(&SIGINT_action.sa_mask);
+						SIGINT_action.sa_flags = 0;
+						sigaction(SIGINT, &SIGINT_action, NULL);
+					}
+
 					// The child process executes this branch
 					// Replace the current program
 					execvp(curr_command->argv[0], curr_command->argv);
@@ -200,6 +220,14 @@ int main() {
 					// all parent has to do in the foreground is call waitpid(), per section 6 instructions
 					else {
 						spawnPid = waitpid(spawnPid, &childStatus, 0);
+
+						// testing reentrancy problem with printf
+						if (WIFSIGNALED(childStatus)) {
+							int termSignal = WTERMSIG(childStatus);
+							printf("terminated by signal %d\n", termSignal);
+							fflush(stdout);
+						}
+
 						// update status instead of exiting
 						status_val = childStatus;
 						break;
