@@ -12,6 +12,8 @@
 #include <unistd.h>  // for execv
 #include <fcntl.h> // for open
 #include <sys/types.h> //for pid_t
+#include <signal.h> // for sigaction
+
 
 #define INPUT_LENGTH 2048
 #define MAX_ARGS 512
