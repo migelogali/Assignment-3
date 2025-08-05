@@ -221,11 +221,10 @@ int main() {
 					else {
 						waitpid(spawnPid, &childStatus, 0);
 
-						// testing reentrancy problem with printf
+						// using write to avoid reentrancy, realized ctrl-c only has signal 2
 						if (WIFSIGNALED(childStatus)) {
-							int termSignal = WTERMSIG(childStatus);
-							printf("terminated by signal %d\n", termSignal);
-							fflush(stdout);
+							char* message = "terminated by signal 2\n";
+  							write(STDOUT_FILENO, message, 23);
 						}
 
 						// update status instead of exiting
