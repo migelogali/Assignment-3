@@ -123,6 +123,16 @@ int main() {
 		// to avoid strcmp error if blank line entered
 		if (curr_command->argc > 0) {
 			if (strcmp(curr_command->argv[0], "exit") == 0) {
+				while ((spawnPid = waitpid(-1, &childStatus, WNOHANG)) > 0) {
+					if (WIFEXITED(childStatus)) {
+						printf("background pid %d is done: exit value %d\n", spawnPid, WEXITSTATUS(childStatus));
+					}
+					else {
+						printf("background pid %d is done: terminated by signal %d\n", spawnPid, WTERMSIG(childStatus));
+					}
+					fflush(stdout);
+				}
+
 				free_command_line(curr_command);
     			return EXIT_SUCCESS;
 			}
