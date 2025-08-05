@@ -244,6 +244,9 @@ int main() {
 				}
 			}
 		}
+
+		free_command_line(curr_command);
+
 		// report when each child process finishes before next command
 		// -1  in argument means 'waitpid() will wait for any child process', per exploration
 		// wnohang makes it non-blocking
