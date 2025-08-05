@@ -195,7 +195,7 @@ int main() {
 					}
 
 					// foreground child signal handling before execvp
-					if (!curr_command->background) {
+					if (!curr_command->is_bg) {
 						struct sigaction SIGINT_action = {0};
 						SIGINT_action.sa_handler = SIG_DFL;
 						sigfillset(&SIGINT_action.sa_mask);
@@ -219,7 +219,7 @@ int main() {
 					}
 					// all parent has to do in the foreground is call waitpid(), per section 6 instructions
 					else {
-						spawnPid = waitpid(spawnPid, &childStatus, 0);
+						waitpid(spawnPid, &childStatus, 0);
 
 						// testing reentrancy problem with printf
 						if (WIFSIGNALED(childStatus)) {
